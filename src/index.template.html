@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Pip's Sky Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #1d1236; --gold: #ffd23a; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; touch-action: none; user-select: none; -webkit-user-select: none; }
+  body { font-family: 'Fredoka', 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif; color: #fff; }
+  #game canvas { display: block; width: 100vw; height: 100vh; }
+  .stroke { text-shadow: 0 .12em 0 var(--ink), .08em .08em 0 var(--ink), -.08em .08em 0 var(--ink), .08em -.06em 0 var(--ink), -.08em -.06em 0 var(--ink); }
+  #hud { position: fixed; inset: 0 0 auto 0; display: flex; justify-content: space-between; align-items: flex-start; padding: 1.6vh 2.4vw; font-size: clamp(14px, 2.6vh, 64px); font-weight: 700; pointer-events: none; opacity: 0; transition: opacity .4s; }
+  #hud.on { opacity: 1; }
+  #hud .box { display: flex; align-items: center; gap: .45em; background: rgba(20, 14, 50, .35); border-radius: 1em; padding: .25em .8em; backdrop-filter: blur(4px); }
+  #hud small { font-size: .62em; color: var(--gold); display: block; line-height: 1; letter-spacing: .06em; }
+  .ico { width: 1.1em; height: 1.1em; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6b0, #ffc21a 45%, #d18a00); box-shadow: 0 .08em 0 var(--ink); }
+  .heart { color: #ff5f86; }
+  .overlay { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; }
+  .overlay.on { display: flex; }
+  .title { font-size: clamp(42px, 12vh, 260px); font-weight: 700; color: var(--gold); line-height: .95; letter-spacing: .02em; transform: rotate(-3deg); animation: bob 2.4s ease-in-out infinite; }
+  .title span { color: #fff; }
+  .sub { font-size: clamp(16px, 3.2vh, 72px); margin-top: 3vh; font-weight: 700; }
+  .blink { animation: blink 1.1s steps(2, start) infinite; }
+  .help { font-size: clamp(12px, 2vh, 44px); margin-top: 2vh; opacity: .95; line-height: 1.6; }
+  .help b { background: rgba(255,255,255,.18); border-radius: .4em; padding: .05em .45em; }
+  .panel { background: rgba(18, 12, 46, .55); border-radius: 3vh; padding: 4vh 6vw; backdrop-filter: blur(6px); }
+  #banner .big { font-size: clamp(32px, 8vh, 180px); font-weight: 700; color: var(--gold); }
+  #banner .small { font-size: clamp(16px, 3.4vh, 80px); font-weight: 700; }
+  #loading { font-size: clamp(18px, 4vh, 90px); background: #3d8bff; pointer-events: auto; }
+  @keyframes bob { 50% { transform: rotate(-3deg) translateY(-2vh); } }
+  @keyframes blink { to { visibility: hidden; } }
+  .tc { position: fixed; bottom: 3vh; display: none; gap: 3vw; pointer-events: auto; }
+  .tc button { width: 76px; height: 76px; border-radius: 50%; border: 3px solid rgba(255,255,255,.6); background: rgba(20,14,50,.35); color: #fff; font: 700 28px 'Fredoka', sans-serif; }
+  @media (pointer: coarse) { .tc { display: flex; } }
+</style>
+</head>
+<body>
+<div id="game"></div>
+
+<div id="hud" class="stroke">
+  <div class="box"><div><small>SCORE</small><span id="score">000000</span></div></div>
+  <div class="box"><div class="ico"></div><span id="coins">× 00</span></div>
+  <div class="box"><div><small>WORLD</small><span id="world">1-1</span></div></div>
+  <div class="box"><div><small>TIME</small><span id="time">300</span></div></div>
+  <div class="box heart"><span>♥</span><span id="lives">3</span></div>
+</div>
+
+<div id="loading" class="overlay on stroke">Loading…</div>
+<div id="title" class="overlay stroke">
+  <div class="title">PIP'S<br><span>SKY RUN</span></div>
+  <div class="sub blink">Press ENTER or tap to start</div>
+  <div class="help"><b>← →</b> move &nbsp; <b>SPACE</b> jump &nbsp; <b>SHIFT</b> run<br><b>P</b> pause &nbsp; <b>M</b> music &nbsp; <b>F</b> fullscreen</div>
+  <div class="help" id="best"></div>
+</div>
+<div id="banner" class="overlay stroke"><div class="panel"><div class="small" id="bannerTop">WORLD 1-1</div><div class="big" id="bannerBig">Sunny Meadow</div></div></div>
+<div id="msg" class="overlay stroke"><div class="panel"><div class="title" id="msgBig" style="animation:none;font-size:clamp(36px,9vh,200px)">PAUSED</div><div class="sub" id="msgSub"></div></div></div>
+
+<div class="tc" style="left:3vw"><button data-k="left">◀</button><button data-k="right">▶</button></div>
+<div class="tc" style="right:3vw"><button data-k="run">B</button><button data-k="jump">A</button></div>
+
+<script>/*ASSETS*/</script>
+<script>/*GAME*/</script>
+</body>
+</html>
