@@ -459,45 +459,79 @@ function drawLevel() {
   }
 }
 
+// Pip: original cartoon hero drawn as smooth vector art at native (4K) resolution.
+// Local units: feet at (0,0), body 24 units tall, facing right.
 function drawHero(x, y, big, face, anim, ground, sq = 0) {
-  const h = big ? 24 : 14;
+  const h = big ? 24 : 14, k = h / 24, OL = '#2a1830';
   ctx.save();
-  // squash & stretch anchored at the feet
-  const fx = (x + 6) * S, fy = (y + h) * S;
-  ctx.translate(fx, fy); ctx.scale(1 + sq * 0.22, 1 - sq * 0.22); ctx.translate(-fx, -fy);
-  if (face < 0) { ctx.translate((x * 2 + 12) * S, 0); ctx.scale(-1, 1); }
-  const stepA = ground ? Math.round(Math.sin(anim * 2)) : 1;
-  const body = big ? 12 : 6, by = y + (big ? 8 : 5);
-  // tail (bushy, swishing)
-  const tw = Math.sin(frame / 8) * 1;
-  R(x - 5, by + body - 7 + tw, 6, 4, '#ff8a2a'); R(x - 5, by + body - 7 + tw, 6, 1, '#ffb070'); R(x - 6, by + body - 8 + tw, 3, 3, '#fff4e6');
-  // legs + boots
-  const l1 = x + 2 + (stepA > 0 ? -1 : 0), l2 = x + 7 + (stepA < 0 ? 1 : 0);
-  R(l1, y + h - 4, 3, 2, '#3b2a50'); R(l2, y + h - 4, 3, 2, '#3b2a50');
-  R(l1 - 0.5, y + h - 2, 4, 2, '#6b3b1f'); R(l2 - 0.5, y + h - 2, 4, 2, '#6b3b1f');
-  // tunic with shading
-  R(x + 1, by, 10, body, '#1fb8a8'); R(x + 1, by, 3, body, '#5fe6d6'); R(x + 9, by, 2, body, '#13877c');
-  R(x + 1, by + body - 2, 10, 1.5, '#7a4a1a'); R(x + 5, by + body - 2, 2, 1.5, '#ffd23a');
-  // arm
-  const sw = ground ? Math.sin(anim * 2) * 2 : -3;
-  R(x + 8, by + 1 + sw, 4, 3, '#1fb8a8'); R(x + 11, by + 1 + sw, 2, 3, '#ffb070');
-  // scarf (flowing)
-  R(x + 1, by - 1, 10, 2, '#ffd23a'); R(x + 1, by, 10, 1, '#e0a810');
-  const fl = Math.sin(frame / 4);
-  R(x - 3, by - 1 + (fl > 0 ? 1 : 0), 4, 2, '#ffd23a'); R(x - 5, by + (fl > 0 ? 0 : 1), 2, 2, '#ffd23a');
+  ctx.translate((x + 6) * S, (y + h) * S);
+  ctx.scale(S * k * (1 + sq * 0.22) * (face < 0 ? -1 : 1), S * k * (1 - sq * 0.22));
+  ctx.lineJoin = ctx.lineCap = 'round';
+  const shape = (fill, lw = 0.7) => { ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = OL; ctx.lineWidth = lw; ctx.stroke(); };
+  const ell = (cx, cy, rx, ry, fill, rot = 0) => { ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, rot, 0, 7); shape(fill); };
+  const limb = (x1, y1, x2, y2, w, col) => {
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+    ctx.strokeStyle = OL; ctx.lineWidth = w + 1.4; ctx.stroke();
+    ctx.strokeStyle = col; ctx.lineWidth = w; ctx.stroke();
+  };
+  const run = ground ? Math.sin(anim * 2) : 0, air = !ground;
+  // leg end points
+  const leg = (hx, a) => [hx + Math.sin(a) * 6.5, -8 + Math.cos(a) * 6.5 - 1.2];
+  let fL, bL, fH, bH;
+  if (air) { fL = [4.5, -4.5]; bL = [-3.5, -1.5]; fH = [7.2, -22.5]; bH = [-6, -11]; }
+  else {
+    fL = leg(1.2, run * 0.75); bL = leg(-1.2, -run * 0.75);
+    fH = [2.5 - run * 3.2, -8.8]; bH = [-2.5 + run * 3.2, -8.8];
+    const bob = Math.abs(run) * 0.6; ctx.translate(0, -bob);
+  }
+  const boot = (p, dark) => { ell(p[0] + 1, p[1] - 0.3, 2.7, 1.6, dark ? '#7a4520' : '#9a5a2a'); ell(p[0] + 0.6, p[1] - 0.9, 1.3, 0.5, dark ? '#9a5a2a' : '#c78448'); };
+  const glove = (p, dark) => { ell(p[0], p[1], 1.9, 1.8, dark ? '#d8dde8' : '#ffffff'); };
+  // back arm + leg
+  limb(-2.5, -13, bH[0], bH[1], 2.6, '#e8a91c'); glove(bH, true);
+  limb(-1.2, -8, bL[0], bL[1], 3, '#6a3fb0'); boot(bL, true);
+  // torso: shirt + overalls
+  ell(0, -12.8, 4.2, 3, '#ffc93a');
+  ctx.beginPath(); ctx.moveTo(-4.2, -11.5); ctx.lineTo(4.2, -11.5); ctx.quadraticCurveTo(5.2, -5.5, 2, -6); ctx.lineTo(-2, -6); ctx.quadraticCurveTo(-5.2, -5.5, -4.2, -11.5); shape('#8150d6');
+  ctx.beginPath(); ctx.rect(-2.6, -13.6, 5.2, 2.6); shape('#8150d6', 0.5);
+  ctx.beginPath(); ctx.moveTo(-3.6, -11.6); ctx.quadraticCurveTo(-1, -9.5, 3.8, -11.4); ctx.strokeStyle = '#a07ef0'; ctx.lineWidth = 0.6; ctx.stroke();
+  ell(-1.7, -12.6, 0.75, 0.75, '#ffd84a'); ell(1.9, -12.6, 0.75, 0.75, '#ffd84a');
+  // front leg
+  limb(1.2, -8, fL[0], fL[1], 3, '#8150d6'); boot(fL);
+  if (air) { limb(2.6, -13, fH[0], fH[1], 2.6, '#ffc93a'); glove(fH); }
   // head
-  const hy = by - 8;
-  R(x + 1, hy, 11, 8, '#ff8a2a'); R(x + 1, hy, 11, 2, '#ffa85a'); R(x + 1, hy + 6, 4, 2, '#e06d10');
-  R(x + 6, hy + 4, 7, 4, '#fff1dc'); R(x + 12, hy + 3.5, 1.5, 1.5, '#2a1a10');
-  R(x + 4, hy + 5, 2, 1, '#ff9cae'); // cheek
-  if (frame % 200 < 6) R(x + 7.5, hy + 3, 3, 1, '#1a1020');            // blink
-  else { R(x + 8, hy + 1.5, 2, 3, '#1a1020'); R(x + 9, hy + 1.5, 1, 1, '#ffffff'); }
-  // ears
-  R(x + 1, hy - 3, 4, 3, '#ff8a2a'); R(x + 2, hy - 2, 2, 2, '#ffd0a8'); R(x + 1, hy - 4, 2, 1, '#2a1a10');
-  R(x + 7, hy - 3, 4, 3, '#ff8a2a'); R(x + 8, hy - 2, 2, 2, '#ffd0a8'); R(x + 8, hy - 4, 2, 1, '#2a1a10');
+  const hy = -18.6;
+  ell(-3.6, hy + 0.6, 2.2, 2.4, '#7a3f1c');                                   // hair at back
+  ell(0.6, hy, 5, 4.7, '#ffd2a8');                                            // face
+  ell(-1.6, hy + 0.6, 1.2, 1.4, '#ffbf90');                                   // ear
+  ctx.beginPath(); ctx.ellipse(-1.6, hy + 0.6, 0.6, 0.8, 0, 0, 7); ctx.fillStyle = '#f0a070'; ctx.fill();
+  // cap
+  ctx.beginPath(); ctx.moveTo(-4.4, hy - 0.6); ctx.bezierCurveTo(-4.6, hy - 7.2, 5.6, hy - 7.6, 5.4, hy - 1.6); ctx.closePath(); shape('#16a89a');
+  ctx.beginPath(); ctx.ellipse(4.6, hy - 1.6, 3.8, 1.1, -0.12, 0, 7); shape('#0f7f75');
+  ctx.beginPath(); ctx.moveTo(-2.4, hy - 4.6); ctx.quadraticCurveTo(0.4, hy - 6.4, 3, hy - 4.8); ctx.strokeStyle = '#5fe0d0'; ctx.lineWidth = 0.8; ctx.stroke();
+  // badge: gold leaf
+  ell(0.7, hy - 3.6, 1.6, 1.5, '#ffffff');
+  ctx.beginPath(); ctx.ellipse(0.7, hy - 3.6, 0.6, 1.05, 0.6, 0, 7); ctx.fillStyle = '#25b04a'; ctx.fill();
+  // eye
+  const blink = frame % 200 < 6;
+  if (blink) { ctx.beginPath(); ctx.moveTo(2.2, hy); ctx.lineTo(4, hy); ctx.strokeStyle = OL; ctx.lineWidth = 0.6; ctx.stroke(); }
+  else {
+    ell(3.1, hy - 0.2, 1.15, 1.6, '#ffffff');
+    ctx.beginPath(); ctx.ellipse(3.5, hy, 0.75, 1.1, 0, 0, 7); ctx.fillStyle = '#2a7fd0'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(3.6, hy + 0.1, 0.4, 0.65, 0, 0, 7); ctx.fillStyle = '#10203a'; ctx.fill();
+    ctx.beginPath(); ctx.arc(3.75, hy - 0.4, 0.25, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+  }
+  ctx.beginPath(); ctx.moveTo(2, hy - 2.3); ctx.quadraticCurveTo(3.2, hy - 3, 4.3, hy - 2.2); ctx.strokeStyle = '#5a2a10'; ctx.lineWidth = 0.55; ctx.stroke();
+  // nose, cheek, freckles, smile
+  ell(5.4, hy + 1.3, 1.1, 0.95, '#ffbf90');
+  ctx.beginPath(); ctx.arc(1.9, hy + 2, 0.9, 0, 7); ctx.fillStyle = 'rgba(255,120,140,0.45)'; ctx.fill();
+  ctx.fillStyle = '#c87850'; [[1.2, 1.6], [2.2, 1.3], [2.6, 2.2]].forEach(([a, b]) => { ctx.beginPath(); ctx.arc(a, hy + b, 0.18, 0, 7); ctx.fill(); });
+  ctx.beginPath(); ctx.moveTo(3, hy + 2.6); ctx.quadraticCurveTo(4.3, hy + (air ? 4.6 : 4), 5.4, hy + 2.7);
+  if (air) { ctx.closePath(); ctx.fillStyle = '#b02a3a'; ctx.fill(); }
+  ctx.strokeStyle = OL; ctx.lineWidth = 0.5; ctx.stroke();
+  // front arm (fist up when jumping)
+  if (!air) { limb(2.6, -13, fH[0], fH[1], 2.6, '#ffc93a'); glove(fH); }
   ctx.restore();
 }
-
 function drawBlob(x, y, sq, hue, flat, flip) {
   const cols = [['#8b4fd6', '#b98cff'], ['#d14f8b', '#ff9cc8'], ['#3c8fd8', '#9cd2ff']][hue || 0];
   if (flat) { R(x, y + 8, 14, 4, cols[0]); R(x + 2, y + 8, 10, 1, cols[1]); return; }
@@ -571,7 +605,7 @@ function draw() {
     R(90, 46, 300, 150, 'rgba(15,20,50,0.55)'); R(90, 46, 300, 2, '#ffd23a'); R(90, 194, 300, 2, '#ffd23a');
     const by = Math.sin(frame / 20) * 2;
     text("PIP'S SKY RUN", 240, 60 + by, 28, '#ffd23a', 'center');
-    outlined(() => drawHero(228, 102, true, 1, frame / 10, true));
+    drawHero(222, 100, true, 1, frame / 10, frame % 120 < 60);
     if (frame % 60 < 42) text('Press ENTER / tap to start', 240, 140, 10, '#fff', 'center');
     text('←→ move   SPACE/Z jump   SHIFT/X run', 240, 158, 7, '#cfe', 'center');
     text('P pause   M music   F fullscreen', 240, 169, 7, '#cfe', 'center');
@@ -580,7 +614,7 @@ function draw() {
   }
   drawLevel();
   drawEntities();
-  if (!(P.inv > 0 && frame % 6 < 3)) outlined(() => drawHero(P.x - cam, P.y, P.big, P.face, P.anim, P.ground || state === 'flag', P.sq));
+  if (!(P.inv > 0 && frame % 6 < 3)) drawHero(P.x - cam, P.y, P.big, P.face, P.anim, P.ground || state === 'flag', P.sq);
   ctx.fillStyle = vigG; ctx.fillRect(-20 * S, -20 * S, cv.width + 40 * S, cv.height + 40 * S);
   hud();
   if (state === 'pause') { R(0, 0, VW, VH, 'rgba(10,15,40,0.55)'); text('PAUSED', 240, 115, 24, '#fff', 'center'); text('press P to resume', 240, 145, 8, '#cfe', 'center'); }
